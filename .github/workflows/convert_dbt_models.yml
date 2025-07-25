@@ -31,10 +31,10 @@ jobs:
 
       - name: Convert models
         run: |
-          mkdir -p models_databricks
+          mkdir -p dbx_models
           for file in sf_models/*.sql; do
             base=$(basename "$file")
-            python -m lakebridge convert \
+            python lakebridge/cli.py convert \
               --input "$file" \
               --output "dbx_models/$base" \
               --source snowflake \
