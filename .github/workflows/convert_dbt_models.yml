@@ -27,7 +27,7 @@ jobs:
         run: |
           git clone https://github.com/databrickslabs/lakebridge.git
           cd lakebridge
-          pip install -r requirements.txt
+          pip install .
           echo "::add-path::$(pwd)/lakebridge"
 
       - name: Convert models
