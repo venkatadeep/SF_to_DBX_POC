@@ -1,0 +1,52 @@
+name: Convert dbt models with Lakebridge
+
+on:
+  push:
+    branches: [ main ]  # or "snowflake-models" if that's where Snowflake models live
+
+jobs:
+  convert-models:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      - name: Install Lakebridge
+        run: |
+          git clone https://github.com/databrickslabs/lakebridge.git
+          cd lakebridge
+          pip install -r requirements.txt
+          echo "::add-path::$(pwd)/lakebridge"
+
+      - name: Convert models
+        run: |
+          mkdir -p models_databricks
+          for file in sf_models/*.sql; do
+            base=$(basename "$file")
+            python -m lakebridge convert \
+              --input "$file" \
+              --output "dbx_models/$base" \
+              --source snowflake \
+              --target databricks
+          done
+
+      - name: Commit converted models
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add dbx_models/
+          git commit -m "Auto-convert Snowflake models to Databricks" || echo "No changes to commit"
+          git push
+
